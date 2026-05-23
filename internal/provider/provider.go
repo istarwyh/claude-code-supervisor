@@ -61,7 +61,7 @@ func SwitchWithHook(cfg *config.Config, providerName string) (*SwitchResult, err
 		providerEnvKeys = append(providerEnvKeys, key)
 	}
 
-	// Clean env: remove ANTHROPIC_*, CLAUDE_* prefixes and provider env keys
+	// Clean env: remove only keys managed by the active provider.
 	settingsWithHook := config.CleanEnvInSettings(mergedSettings, providerEnvKeys)
 
 	// Get ccc absolute path for hook command
@@ -98,8 +98,11 @@ func SwitchWithHook(cfg *config.Config, providerName string) (*SwitchResult, err
 		return nil, fmt.Errorf("failed to update current provider: %w", err)
 	}
 
-	// Extract env map from merged settings for passing to subprocess
-	envMap := config.GetEnv(mergedSettings)
+	// Provider env must override any conflicting settings.json env when launching Claude.
+	envMap := copyEnvMap(config.GetEnv(settingsWithHook))
+	for key, value := range providerEnvMap {
+		envMap[key] = value
+	}
 
 	// Convert env map to EnvPair slice
 	envVars := envMapToPairs(envMap)
@@ -135,6 +138,14 @@ func createSupervisorCommandFiles(cccPath string) error {
 	}
 
 	return nil
+}
+
+func copyEnvMap(envMap map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{}, len(envMap))
+	for key, value := range envMap {
+		result[key] = value
+	}
+	return result
 }
 
 // envMapToPairs converts a map[string]interface{} to []EnvPair.

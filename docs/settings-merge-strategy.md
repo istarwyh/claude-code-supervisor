@@ -251,11 +251,9 @@ func CleanEnvInSettings(settings map[string]interface{}, providerEnvKeys []strin
 1. 深拷贝 settings（不修改输入）
 2. 获取 `env` map（不存在则跳过）
 3. 遍历每个 key
-4. 删除满足以下任一条件的 key：
-   - 以 `ANTHROPIC_` 开头
-   - 以 `CLAUDE_` 开头
-   - 存在于 `providerEnvKeys` 列表中
-5. 返回新的 map
+4. 删除存在于 `providerEnvKeys` 列表中的 key
+5. 保留其他用户自定义 env，即使它们以 `ANTHROPIC_`、`CLAUDE_` 或 `CLAUDE_CODE_` 开头
+6. 返回新的 map
 
 ---
 
@@ -327,7 +325,7 @@ func EnsureStopHook(settings map[string]interface{}, hookCommand string) map[str
   │           merged = DeepMerge(merged, userSettings)  ← userSettings 优先
   │
   ├─→ CleanEnvInSettings(merged, providerEnvKeys)
-  │   └─→ 清空 provider env keys
+  │   └─→ 清空当前 provider 管理的同名 env keys
   │
   ├─→ EnsureStopHook(merged, hookCommand)
   │   └─→ 确保 Supervisor Stop hook 存在

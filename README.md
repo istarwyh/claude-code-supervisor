@@ -15,6 +15,10 @@
 - Unlike ralph's signal-based exit detection, ccc's Supervisor forks the full session context to evaluate actual work quality.
 - This prevents fake completions where AI claims "done" but the result has poor quality or unresolved issues.
 
+## Fork Policy: Environment Conflicts
+
+This fork resolves environment conflicts with deterministic precedence instead of refusing to start. See [Environment Conflict Policy](docs/environment-conflict-policy.md).
+
 ## Quick Start
 
 ### 1. Install

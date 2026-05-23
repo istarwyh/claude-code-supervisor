@@ -157,6 +157,66 @@ func TestSwitchWithHook(t *testing.T) {
 		}
 	})
 
+	t.Run("provider env overrides conflicting settings env for subprocess", func(t *testing.T) {
+		cleanup := setupTestDir(t)
+		defer cleanup()
+
+		cfg := setupTestConfig(t)
+		if err := config.Save(cfg); err != nil {
+			t.Fatalf("Failed to save config: %v", err)
+		}
+
+		existingSettings := `{
+  "env": {
+    "ANTHROPIC_API_KEY": "user-key",
+    "ANTHROPIC_BASE_URL": "https://old.example.com/anthropic",
+    "ANTHROPIC_MODEL": "old-model",
+    "CLAUDE_CODE_MAX_RETRIES": "5",
+    "MY_CUSTOM_VAR": "value"
+  }
+}`
+		if err := os.WriteFile(config.GetSettingsPath(), []byte(existingSettings), 0644); err != nil {
+			t.Fatalf("Failed to write settings: %v", err)
+		}
+
+		result, err := SwitchWithHook(cfg, "glm")
+		if err != nil {
+			t.Fatalf("SwitchWithHook() error = %v", err)
+		}
+
+		envMap := make(map[string]string)
+		for _, pair := range result.EnvVars {
+			envMap[pair.Key] = pair.Value
+		}
+
+		if envMap["ANTHROPIC_BASE_URL"] != "https://open.bigmodel.cn/api/anthropic" {
+			t.Errorf("ANTHROPIC_BASE_URL = %v, want glm URL", envMap["ANTHROPIC_BASE_URL"])
+		}
+		if envMap["ANTHROPIC_MODEL"] != "glm-4.7" {
+			t.Errorf("ANTHROPIC_MODEL = %v, want glm-4.7", envMap["ANTHROPIC_MODEL"])
+		}
+		if envMap["ANTHROPIC_API_KEY"] != "user-key" {
+			t.Errorf("ANTHROPIC_API_KEY = %v, want user-key", envMap["ANTHROPIC_API_KEY"])
+		}
+		if envMap["CLAUDE_CODE_MAX_RETRIES"] != "5" {
+			t.Errorf("CLAUDE_CODE_MAX_RETRIES = %v, want 5", envMap["CLAUDE_CODE_MAX_RETRIES"])
+		}
+
+		settingsEnv := result.Settings["env"].(map[string]interface{})
+		if _, exists := settingsEnv["ANTHROPIC_BASE_URL"]; exists {
+			t.Error("settings env should not keep provider-managed ANTHROPIC_BASE_URL")
+		}
+		if _, exists := settingsEnv["ANTHROPIC_MODEL"]; exists {
+			t.Error("settings env should not keep provider-managed ANTHROPIC_MODEL")
+		}
+		if settingsEnv["ANTHROPIC_API_KEY"] != "user-key" {
+			t.Error("settings env should keep non-provider ANTHROPIC_API_KEY")
+		}
+		if settingsEnv["CLAUDE_CODE_MAX_RETRIES"] != "5" {
+			t.Error("settings env should keep non-provider CLAUDE_CODE_MAX_RETRIES")
+		}
+	})
+
 	t.Run("switch to non-existing provider", func(t *testing.T) {
 		cleanup := setupTestDir(t)
 		defer cleanup()
