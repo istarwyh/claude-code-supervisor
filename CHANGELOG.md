@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-05-24
+
+### Changed
+
+- Documented the fork policy for environment variable conflicts.
+- Updated install and release links to the fork repository.
+
+### Fixed
+
+- Ensured active provider env overrides conflicting `settings.json.env` keys when launching Claude while preserving unrelated user env values.
+
 ## [0.3.0] - 2026-01-16
 
 ### Added
@@ -77,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repositioned project as "Claude Code Supervisor"
 - Repository renamed from `claude-code-config-switcher` to `claude-code-supervisor`
 
+[0.3.3]: https://github.com/istarwyh/claude-code-supervisor/compare/v0.3.2...v0.3.3
 [0.3.0]: https://github.com/guyskk/claude-code-supervisor/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/guyskk/claude-code-supervisor/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/guyskk/claude-code-supervisor/releases/tag/v0.2.0
